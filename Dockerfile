@@ -6,4 +6,4 @@ WORKDIR /app
 
 ADD app.py .
 
-CMD ./app.py
+CMD python -u ./app.py

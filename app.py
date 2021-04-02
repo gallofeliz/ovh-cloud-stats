@@ -34,15 +34,23 @@ def get_stats():
             'totalBytes': 0,
             'totalMonthlyPrice': 0,
             'totalStorageMonthlyPrice': 0,
-            'totalBandwidthMonthyPrice': 0
+            'totalBandwidthMonthyPrice': 0,
+            'containers': []
         }
         data['projects'].append(project_data)
         storages = client.get('/cloud/project/' + project_id + '/storage')
+        print(storages)
         for storage in storages:
             real_storage = client.get('/cloud/project/' + project_id + '/storage/' + storage['id'], noObjects=True)
             project_data['totalContainers'] += 1
             project_data['totalBytes'] += real_storage['storedBytes']
             project_data['totalObjects'] += real_storage['storedObjects']
+            container = {
+                'name': storage['name'],
+                'totalBytes': real_storage['storedBytes'],
+                'totalObjects': real_storage['storedObjects']
+            }
+            project_data['containers'].append(container)
 
         usage = client.get('/cloud/project/' + project_id + '/usage/current')
         storage_usage = usage['hourlyUsage']['storage']
