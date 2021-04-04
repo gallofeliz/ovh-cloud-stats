@@ -1,9 +1,16 @@
- version: "3.5"
+version: "3.5"
 
- services:
-   api:
-     build:
-       context: .
-     ports:
+services:
+  api:
+    build:
+      context: .
+    ports:
         - "8080:8080"
-     env_file: ./.env
+    env_file: ./.env
+  telegraf:
+    image: telegraf
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    command: telegraf --test
+    depends_on:
+      - api

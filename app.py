@@ -13,61 +13,54 @@ client = ovh.Client(
 )
 
 def get_stats():
-    projects = client.get('/cloud/project')
 
-    data = {
-        'totalContainers': 0,
-        'totalObjects': 0,
-        'totalBytes': 0,
-        'totalMonthlyPrice': 0,
-        'totalStorageMonthlyPrice': 0,
-        'totalBandwidthMonthyPrice': 0,
-        'projects': []
-    }
+    stats = []
+    projects = client.get('/cloud/project')
 
     for project_id in projects:
         project = client.get('/cloud/project/' + project_id)
-        project_data = {
-            'name': project['description'], # key is description but is name in UI
-            'totalContainers': 0,
-            'totalObjects': 0,
-            'totalBytes': 0,
-            'totalMonthlyPrice': 0,
-            'totalStorageMonthlyPrice': 0,
-            'totalBandwidthMonthyPrice': 0,
-            'containers': []
-        }
-        data['projects'].append(project_data)
-        storages = client.get('/cloud/project/' + project_id + '/storage')
-        print(storages)
-        for storage in storages:
-            real_storage = client.get('/cloud/project/' + project_id + '/storage/' + storage['id'], noObjects=True)
-            project_data['totalContainers'] += 1
-            project_data['totalBytes'] += real_storage['storedBytes']
-            project_data['totalObjects'] += real_storage['storedObjects']
-            container = {
-                'name': storage['name'],
-                'totalBytes': real_storage['storedBytes'],
-                'totalObjects': real_storage['storedObjects']
-            }
-            project_data['containers'].append(container)
+        containers = client.get('/cloud/project/' + project_id + '/storage')
+
+        for _container in containers:
+            container = client.get('/cloud/project/' + project_id + '/storage/' + _container['id'], noObjects=True)
+
+            stats.append({
+                "stat": "object-storage",
+                "project": {
+                    "id": project['project_id'],
+                    "name": project['description']
+                },
+                "region": container['region'],
+                "container": {
+                    "id": _container['id'],
+                    "name": container['name'],
+                },
+                'storedObjects': container['storedObjects'],
+                'storedBytes': container['storedBytes']
+            })
 
         usage = client.get('/cloud/project/' + project_id + '/usage/current')
-        storage_usage = usage['hourlyUsage']['storage']
 
-        for usage in storage_usage:
-            project_data['totalMonthlyPrice'] += usage['totalPrice']
-            project_data['totalStorageMonthlyPrice'] += usage['stored']['totalPrice'] if usage['stored'] else 0
-            project_data['totalBandwidthMonthyPrice'] += usage['outgoingBandwidth']['totalPrice']
+        for storage_usage in usage['hourlyUsage']['storage']:
+            stats.append({
+                "stat": "hourly-storage-usage",
+                "project": {
+                    "id": project['project_id'],
+                    "name": project['description']
+                },
+                "region": storage_usage['region'],
+                'totalPrice': storage_usage['totalPrice'],
+                'outgoingBandwidth': {
+                    'quantityBytes': round(storage_usage['outgoingBandwidth']['quantity']['value'] * 1024 * 1024 * 1024),
+                    'totalPrice': storage_usage['outgoingBandwidth']['totalPrice']
+                },
+                'stored': {
+                    'quantityBytesHour': round(storage_usage['stored']['quantity']['value'] * 1024 * 1024 * 1024) if storage_usage['stored'] else 0,
+                    'totalPrice': storage_usage['stored']['totalPrice'] if storage_usage['stored'] else 0
+                }
+            })
 
-        data['totalContainers'] += project_data['totalContainers']
-        data['totalBytes'] += project_data['totalBytes']
-        data['totalObjects'] += project_data['totalObjects']
-        data['totalMonthlyPrice'] += project_data['totalMonthlyPrice']
-        data['totalStorageMonthlyPrice'] += project_data['totalStorageMonthlyPrice']
-        data['totalBandwidthMonthyPrice'] += project_data['totalBandwidthMonthyPrice']
-
-        return data
+    return stats
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
