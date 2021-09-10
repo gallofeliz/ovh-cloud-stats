@@ -3,7 +3,7 @@ import ovh
 import http.server, json, logging, os, socketserver
 
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(message)s')
-port = int(os.environ.get('PORT', 8080))
+port = int(os.environ.get('PORT', 80))
 # https://api.ovh.com/createToken
 client = ovh.Client(
     endpoint='ovh-eu',               # Endpoint of API OVH Europe (List of available endpoints)
