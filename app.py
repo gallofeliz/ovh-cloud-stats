@@ -62,7 +62,7 @@ def get_stats():
 
     return stats
 
-class Handler(http.server.SimpleHTTPRequestHandler):
+class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if (self.path == '/favicon.ico'):
             return
