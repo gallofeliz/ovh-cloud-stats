@@ -51,8 +51,8 @@ def get_stats():
                 "region": storage_usage['region'],
                 'totalPrice': storage_usage['totalPrice'],
                 'outgoingBandwidth': {
-                    'quantityBytes': round(storage_usage['outgoingBandwidth']['quantity']['value'] * 1024 * 1024 * 1024),
-                    'totalPrice': storage_usage['outgoingBandwidth']['totalPrice']
+                    'quantityBytes': round(storage_usage['outgoingBandwidth']['quantity']['value'] * 1024 * 1024 * 1024) if storage_usage['outgoingBandwidth'] else 0,
+                    'totalPrice': storage_usage['outgoingBandwidth']['totalPrice'] if storage_usage['outgoingBandwidth'] else 0
                 },
                 'stored': {
                     'quantityBytesHour': round(storage_usage['stored']['quantity']['value'] * 1024 * 1024 * 1024) if storage_usage['stored'] else 0,
